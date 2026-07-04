@@ -19,6 +19,7 @@ type Info struct {
 	HasGPU     bool   // NVIDIA GPU visible on the host
 	Docker     string // server (or client) version, "" if absent
 	Compose    string // compose v2 plugin version, "" if absent
+	Podman     string // podman version, "" if absent
 	NvidiaCTK  bool   // nvidia-ctk binary present
 }
 
@@ -33,6 +34,7 @@ func Detect() Info {
 
 	info.Docker = dockerVersion()
 	info.Compose = composeVersion()
+	info.Podman = podmanVersion()
 	_, err := exec.LookPath("nvidia-ctk")
 	info.NvidiaCTK = err == nil
 	return info
@@ -106,4 +108,13 @@ func composeVersion() string {
 		return ""
 	}
 	return strings.TrimSpace(string(out))
+}
+
+func podmanVersion() string {
+	out, err := exec.Command("podman", "--version").Output()
+	if err != nil {
+		return ""
+	}
+	// "podman version 4.9.3" -> "4.9.3"
+	return strings.TrimPrefix(strings.TrimSpace(string(out)), "podman version ")
 }

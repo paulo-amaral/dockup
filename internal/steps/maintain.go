@@ -5,7 +5,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 func statusStep() Step {

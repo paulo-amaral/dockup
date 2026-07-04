@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 // auditStep runs read-only checks inspired by the CIS Docker Benchmark.
@@ -21,8 +21,8 @@ func auditStep() Step {
 		Report: func(info sysinfo.Info) (string, error) {
 			var b strings.Builder
 			b.WriteString("dockup security audit — read-only, nothing was changed\n\n")
-			for _, c := range runAuditChecks() {
-				fmt.Fprintf(&b, "[%s] %-28s %s\n", c.status, c.name, c.detail)
+			for _, c := range Audit() {
+				fmt.Fprintf(&b, "[%s] %-28s %s\n", c.Status, c.Name, c.Detail)
 			}
 			b.WriteString("\nReference: CIS Docker Benchmark (basic subset)\n")
 			return b.String(), nil
@@ -30,15 +30,17 @@ func auditStep() Step {
 	}
 }
 
-type checkResult struct {
-	status string // PASS, WARN, INFO
-	name   string
-	detail string
+// AuditResult is one security check outcome. Status is PASS, WARN or INFO.
+type AuditResult struct {
+	Status string `json:"status"`
+	Name   string `json:"name"`
+	Detail string `json:"detail"`
 }
 
-func runAuditChecks() []checkResult {
+// Audit runs all read-only security checks. Exported for --format json.
+func Audit() []AuditResult {
 	cfg := readDaemonConfig()
-	return []checkResult{
+	return []AuditResult{
 		checkSocket(),
 		checkDockerGroup(),
 		checkDaemonKey(cfg, "log-opts", "log rotation", "log-opts with max-size limits container log growth"),
@@ -57,26 +59,26 @@ func readDaemonConfig() map[string]any {
 	return cfg
 }
 
-func checkSocket() checkResult {
+func checkSocket() AuditResult {
 	const sock = "/var/run/docker.sock"
 	fi, err := os.Stat(sock)
 	if err != nil {
-		return checkResult{"INFO", "docker socket", "not found (daemon not running?)"}
+		return AuditResult{"INFO", "docker socket", "not found (daemon not running?)"}
 	}
 	mode := fi.Mode().Perm()
 	if mode&0o007 != 0 {
-		return checkResult{"WARN", "docker socket", fmt.Sprintf("%s is world-accessible (%o); expected 660 root:docker", sock, mode)}
+		return AuditResult{"WARN", "docker socket", fmt.Sprintf("%s is world-accessible (%o); expected 660 root:docker", sock, mode)}
 	}
 	if st, ok := fi.Sys().(*syscall.Stat_t); ok && st.Uid != 0 {
-		return checkResult{"WARN", "docker socket", fmt.Sprintf("owner uid %d, expected root", st.Uid)}
+		return AuditResult{"WARN", "docker socket", fmt.Sprintf("owner uid %d, expected root", st.Uid)}
 	}
-	return checkResult{"PASS", "docker socket", fmt.Sprintf("permissions %o", mode)}
+	return AuditResult{"PASS", "docker socket", fmt.Sprintf("permissions %o", mode)}
 }
 
-func checkDockerGroup() checkResult {
+func checkDockerGroup() AuditResult {
 	out, err := exec.Command("getent", "group", "docker").Output()
 	if err != nil {
-		return checkResult{"INFO", "docker group", "no docker group found"}
+		return AuditResult{"INFO", "docker group", "no docker group found"}
 	}
 	parts := strings.Split(strings.TrimSpace(string(out)), ":")
 	members := ""
@@ -84,38 +86,38 @@ func checkDockerGroup() checkResult {
 		members = parts[3]
 	}
 	if members == "" {
-		return checkResult{"PASS", "docker group", "no extra members"}
+		return AuditResult{"PASS", "docker group", "no extra members"}
 	}
-	return checkResult{"WARN", "docker group", fmt.Sprintf("members are root-equivalent: %s", members)}
+	return AuditResult{"WARN", "docker group", fmt.Sprintf("members are root-equivalent: %s", members)}
 }
 
-func checkDaemonKey(cfg map[string]any, key, name, why string) checkResult {
+func checkDaemonKey(cfg map[string]any, key, name, why string) AuditResult {
 	if _, ok := cfg[key]; ok {
-		return checkResult{"PASS", name, "configured in daemon.json"}
+		return AuditResult{"PASS", name, "configured in daemon.json"}
 	}
-	return checkResult{"WARN", name, "not set — " + why + " (run: dockup harden)"}
+	return AuditResult{"WARN", name, "not set — " + why + " (run: dockup harden)"}
 }
 
-func checkUsernsRemap(cfg map[string]any) checkResult {
+func checkUsernsRemap(cfg map[string]any) AuditResult {
 	if _, ok := cfg["userns-remap"]; ok {
-		return checkResult{"PASS", "userns-remap", "user namespace remapping active"}
+		return AuditResult{"PASS", "userns-remap", "user namespace remapping active"}
 	}
-	return checkResult{"INFO", "userns-remap", "not set; consider it for multi-tenant hosts (breaks some workloads)"}
+	return AuditResult{"INFO", "userns-remap", "not set; consider it for multi-tenant hosts (breaks some workloads)"}
 }
 
-func checkPrivilegedContainers() checkResult {
+func checkPrivilegedContainers() AuditResult {
 	out, err := exec.Command("docker", "ps", "--quiet").Output()
 	if err != nil {
-		return checkResult{"INFO", "privileged containers", "cannot query daemon"}
+		return AuditResult{"INFO", "privileged containers", "cannot query daemon"}
 	}
 	ids := strings.Fields(string(out))
 	if len(ids) == 0 {
-		return checkResult{"PASS", "privileged containers", "no running containers"}
+		return AuditResult{"PASS", "privileged containers", "no running containers"}
 	}
 	args := append([]string{"inspect", "--format", "{{.Name}} {{.HostConfig.Privileged}}"}, ids...)
 	insp, err := exec.Command("docker", args...).Output()
 	if err != nil {
-		return checkResult{"INFO", "privileged containers", "inspect failed"}
+		return AuditResult{"INFO", "privileged containers", "inspect failed"}
 	}
 	var bad []string
 	for _, line := range strings.Split(strings.TrimSpace(string(insp)), "\n") {
@@ -124,7 +126,7 @@ func checkPrivilegedContainers() checkResult {
 		}
 	}
 	if len(bad) > 0 {
-		return checkResult{"WARN", "privileged containers", strings.Join(bad, ", ")}
+		return AuditResult{"WARN", "privileged containers", strings.Join(bad, ", ")}
 	}
-	return checkResult{"PASS", "privileged containers", fmt.Sprintf("%d running, none privileged", len(ids))}
+	return AuditResult{"PASS", "privileged containers", fmt.Sprintf("%d running, none privileged", len(ids))}
 }

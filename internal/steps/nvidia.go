@@ -3,7 +3,7 @@ package steps
 import (
 	"os/exec"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 // NVIDIA Container Toolkit replaced the deprecated nvidia-docker2. The repo

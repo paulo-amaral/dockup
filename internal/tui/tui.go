@@ -10,8 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/steps"
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/steps"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 var (
@@ -253,7 +253,7 @@ func (m Model) infoPanel() string {
 	}
 	lines := []string{
 		fmt.Sprintf("host    %s (%s)", host, m.info.Arch),
-		fmt.Sprintf("docker  %s   compose %s", val(m.info.Docker), val(m.info.Compose)),
+		fmt.Sprintf("docker  %s   compose %s   podman %s", val(m.info.Docker), val(m.info.Compose), val(m.info.Podman)),
 		fmt.Sprintf("root %s   nvidia gpu %s   nvidia-ctk %s", b(m.info.Root), b(m.info.HasGPU), b(m.info.NvidiaCTK)),
 	}
 	return panelSt.Render(strings.Join(lines, "\n"))

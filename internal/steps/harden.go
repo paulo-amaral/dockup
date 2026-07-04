@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 const daemonJSONPath = "/etc/docker/daemon.json"

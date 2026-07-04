@@ -1,4 +1,4 @@
-module github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose
+module github.com/paulo-amaral/dockup
 
 go 1.26.4
 

@@ -2,10 +2,10 @@
 # dockup bootstrap — downloads the latest dockup release, verifies its
 # SHA-256 checksum and launches it. All install logic lives in dockup itself.
 #
-#   curl -fsSL https://raw.githubusercontent.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/master/install.sh | sh
+#   curl -fsSL https://raw.githubusercontent.com/paulo-amaral/dockup/master/install.sh | sh
 set -eu
 
-REPO="paulo-amaral/Easy-Install-docker-ce-docker-compose"
+REPO="paulo-amaral/dockup"
 PROJECT="dockup"
 
 say() { printf '\033[1;33m[dockup]\033[0m %s\n' "$1"; }

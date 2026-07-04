@@ -36,5 +36,5 @@ release:
   footer: |
     ## Install
     ```sh
-    curl -fsSL https://raw.githubusercontent.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/master/install.sh | sh
+    curl -fsSL https://raw.githubusercontent.com/paulo-amaral/dockup/master/install.sh | sh
     ```

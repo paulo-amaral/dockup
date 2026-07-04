@@ -3,7 +3,7 @@ package steps
 import (
 	"os/exec"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 // Docker's official convenience script installs the engine, the buildx and

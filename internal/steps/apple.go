@@ -4,12 +4,15 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 // Apple's open source `container` tool (github.com/apple/container) runs
 // Linux containers in lightweight VMs on Apple Silicon. Requires macOS 15.5+.
-// Homebrew must not run as root, so these steps are intentionally NeedsRoot=false.
+// Install preference: MacPorts, then Apple's signed .pkg from GitHub releases.
+// Homebrew also works (brew install --cask container) but is deliberately not
+// automated here; it is documented in the README as an alternative.
+// Steps stay NeedsRoot=false: the script escalates only where needed via sudo.
 func appleSteps(info sysinfo.Info) []Step {
 	if info.Arch != "arm64" {
 		return []Step{{
@@ -26,11 +29,21 @@ func appleSteps(info sysinfo.Info) []Step {
 		{
 			ID:    "apple-install",
 			Title: "Install Apple container",
-			Desc:  "brew install --cask container (Apple's native Linux container runtime)",
+			Desc:  "Via MacPorts, or Apple's signed .pkg (Apple's native Linux container runtime)",
 			Command: func(sysinfo.Info) *exec.Cmd {
 				return shell(`set -e
-command -v brew >/dev/null 2>&1 || { echo "Homebrew not found. Install it from https://brew.sh or grab the signed .pkg from https://github.com/apple/container/releases"; exit 1; }
-brew install --cask container
+if command -v port >/dev/null 2>&1; then
+    echo "Installing via MacPorts (sudo may prompt for your password)..."
+    sudo port install container
+else
+    echo "MacPorts not found; installing Apple's signed .pkg from GitHub releases..."
+    url=$(curl -fsSL https://api.github.com/repos/apple/container/releases/latest | grep -o 'https://[^"]*\.pkg' | head -n1)
+    [ -n "$url" ] || { echo "could not locate a .pkg asset in the latest release"; exit 1; }
+    tmp=$(mktemp -d)
+    trap 'rm -rf "$tmp"' EXIT
+    curl -fsSL -o "$tmp/container.pkg" "$url"
+    sudo installer -pkg "$tmp/container.pkg" -target /
+fi
 container --version`)
 			},
 		},

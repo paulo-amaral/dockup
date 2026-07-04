@@ -10,7 +10,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/internal/sysinfo"
 )
 
 type Step struct {
@@ -28,7 +28,7 @@ type Step struct {
 func All(info sysinfo.Info) []Step {
 	var s []Step
 	if info.OS == "linux" {
-		s = append(s, dockerInstallStep(), nvidiaStep(info), hardenStep(), auditStep())
+		s = append(s, dockerInstallStep(), nvidiaStep(info), podmanStep(), hardenStep(), auditStep())
 	}
 	if info.OS == "darwin" {
 		s = append(s, appleSteps(info)...)

@@ -1,0 +1,28 @@
+name: demo
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  vhs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: build dockup into PATH
+        run: |
+          go build -o dockup-bin ./cmd/dockup
+          sudo install -m 0755 dockup-bin /usr/local/bin/dockup
+          rm dockup-bin
+      - uses: charmbracelet/vhs-action@v2
+        with:
+          path: demo.tape
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "docs: regenerate demo.gif"
+          file_pattern: demo.gif
