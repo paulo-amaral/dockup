@@ -1,108 +1,71 @@
-#!/bin/bash
-set -e
-#apt-get install -y curl
+#!/bin/sh
+# dockup bootstrap — downloads the latest dockup release, verifies its
+# SHA-256 checksum and launches it. All install logic lives in dockup itself.
+#
+#   curl -fsSL https://raw.githubusercontent.com/paulo-amaral/Easy-Install-docker-ce-docker-compose/master/install.sh | sh
+set -eu
 
-cat << "EOF"
- ___ _   _ ____ _____  _    _     _
-|_ _| \ | / ___|_   _|/ \  | |   | |
- | ||  \| \___ \ | | / _ \ | |   | |
- | || |\  |___) || |/ ___ \| |___| |___
-|___|_| \_|____/ |_/_/   \_\_____|_____|
- ____   ___   ____ _  _______ ____        ____ _____
-|  _ \ / _ \ / ___| |/ / ____|  _ \      / ___| ____|
-| | | | | | | |   | ' /|  _| | |_) |____| |   |  _|
-| |_| | |_| | |___| . \| |___|  _ <_____| |___| |___
-|____/ \___/ \____|_|\_\_____|_| \_\     \____|_____|
-EOF
+REPO="paulo-amaral/Easy-Install-docker-ce-docker-compose"
+PROJECT="dockup"
 
-cat << EOF
-Open source Docker CE and Docker compose install
-Copyright 2018-$(date +'%Y'), PAULO SÉRGIO AMARAL
-https://github.com/paulo-amaral
-===================================================
-EOF
+say() { printf '\033[1;33m[dockup]\033[0m %s\n' "$1"; }
+die() { printf '\033[1;31m[dockup]\033[0m %s\n' "$1" >&2; exit 1; }
 
-#Verify running as root:
-check_user() {
-    USER_ID=$(/usr/bin/id -u)
-    return $USER_ID
-}
+os=$(uname -s | tr '[:upper:]' '[:lower:]')
+arch=$(uname -m)
+case "$arch" in
+    x86_64) arch=amd64 ;;
+    aarch64 | arm64) arch=arm64 ;;
+    *) die "unsupported architecture: $arch" ;;
+esac
+case "$os" in
+    linux) ;;
+    darwin) [ "$arch" = arm64 ] || die "on Intel Macs use Docker Desktop; dockup supports Apple Silicon only" ;;
+    *) die "unsupported OS: $os (dockup targets Linux and macOS)" ;;
+esac
 
-if [ "$USER_ID" > 0 ]; then
-    printf "You must be a root user" 2>&1
-    exit 1
+command -v curl >/dev/null 2>&1 || die "curl is required"
+
+say "resolving latest release..."
+tag=$(curl -fsSL "https://api.github.com/repos/${REPO}/releases/latest" |
+    sed -n 's/.*"tag_name"[^"]*"\([^"]*\)".*/\1/p' | head -n1)
+[ -n "$tag" ] || die "could not resolve the latest release tag"
+version=${tag#v}
+
+archive="${PROJECT}_${version}_${os}_${arch}.tar.gz"
+base="https://github.com/${REPO}/releases/download/${tag}"
+tmp=$(mktemp -d)
+trap 'rm -rf "$tmp"' EXIT
+
+say "downloading ${PROJECT} ${tag} (${os}/${arch})..."
+curl -fsSL -o "${tmp}/${archive}" "${base}/${archive}"
+curl -fsSL -o "${tmp}/checksums.txt" "${base}/checksums.txt"
+
+say "verifying SHA-256 checksum..."
+expected=$(grep " ${archive}\$" "${tmp}/checksums.txt" | awk '{print $1}')
+[ -n "$expected" ] || die "checksum for ${archive} not found in checksums.txt"
+if command -v sha256sum >/dev/null 2>&1; then
+    actual=$(sha256sum "${tmp}/${archive}" | awk '{print $1}')
+else
+    actual=$(shasum -a 256 "${tmp}/${archive}" | awk '{print $1}')
+fi
+[ "$expected" = "$actual" ] || die "checksum mismatch — aborting (expected ${expected}, got ${actual})"
+
+tar -xzf "${tmp}/${archive}" -C "$tmp"
+
+dest="/usr/local/bin"
+if [ -w "$dest" ]; then
+    install -m 0755 "${tmp}/${PROJECT}" "${dest}/${PROJECT}"
+elif command -v sudo >/dev/null 2>&1; then
+    say "installing to ${dest} (sudo may prompt for your password)..."
+    sudo install -m 0755 "${tmp}/${PROJECT}" "${dest}/${PROJECT}"
+else
+    dest="${HOME}/.local/bin"
+    mkdir -p "$dest"
+    install -m 0755 "${tmp}/${PROJECT}" "${dest}/${PROJECT}"
+    say "installed to ${dest}; make sure it is on your PATH"
 fi
 
-
-#Be sure you have git installed.
-check_git(){
-    if ! [ -x "$(command -v git)" ]; then
-        echo -e -n "${CYAN}(!)${NC} - Error: git is not installed. Please Install\n"
-        exit 1
-    fi
-}
-
-# Be sure you have curl installed.
-check_curl() {
-    OS=$(sed -n -e '/PRETTY_NAME/ s/^.*=\|"\| .*//gp' /etc/os-release)
-    if ! [ -x "$(command -v curl)" ]; then
-        printf "\033[31m ERROR: can't find CURL \033[0m\n"
-        printf '\033[32m INSTALLING CURL\033[0m\n'
-        if [ "$OS" == Debian ]; then
-            apt-get update
-            apt-get install -y curl
-            elif [ "$OS" == CentOS ]; then
-            yum -y install curl
-            yum -y install deltarpm
-            yum -y install yum-utils device-mapper-persistent-data
-         else
-        if [ -x "$(command -v curl)" ]; then
-        printf "CURL is installed on this server\n"
-        fi
-    fi
-fi
-}
-
-# composer download and Install
-downloadcomposer() {
-    # get latest docker compose released tag
-    export COMPOSE_VERSION=$(curl -s https://api.github.com/repos/docker/compose/releases/latest | grep 'tag_name' | cut -d\" -f4)
-    # Install docker-compose
-    sh -c "curl -L http://github.com/docker/compose/releases/download/${COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > /usr/local/bin/docker-compose"
-    sh -c "curl -L http://raw.githubusercontent.com/docker/compose/${COMPOSE_VERSION}/contrib/completion/bash/docker-compose > /etc/bash_completion.d/docker-compose"
-    chmod a+rx '/usr/local/bin/docker-compose' 
-}
-
-#check if docker installed
-check_docker(){
-    if [ -x "$(command -v docker)" ]; then
-        printf "Docker Installed\n"
-        docker --version
-        echo ""
-    else
-        printf '\033[32m INSTALLING DOCKER\033[0m\n'
-        curl -fsSL https://get.docker.com -o get-docker.sh
-        sh get-docker.sh
-    fi
-}
-
-#check if docker Compose Installed
-check_compose(){
-    if [ -x "$(command -v docker-compose)" ]; then
-        printf "Docker Compose Installed :)\n "
-        docker-compose --version
-        echo ""
-    else
-        printf '\033[32m INSTALLING DOCKER COMPOSE\033[0m\n'
-        #Install docker-compose
-        downloadcomposer
-    fi
-}
-
-check_git
-check_curl
-check_docker
-check_compose
-
-
-exit 0;
+say "installed: $("${dest}/${PROJECT}" --version)"
+say "launching TUI (run '${PROJECT}' anytime; use 'sudo ${PROJECT}' on Linux to install)"
+exec "${dest}/${PROJECT}"

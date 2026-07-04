@@ -1,0 +1,18 @@
+# Binaries
+/dockup
+/dist/
+*.exe
+*.test
+
+# Go
+/vendor/
+coverage.out
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*.swp

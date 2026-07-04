@@ -1,5 +1,0 @@
-curl -v -X POST -H 'Content-Range: bytes 0-6/20' -H 'Content-Length: 7' -d 'This wo' http://localhost:8900/resume_upload/ceshi.txt 2>&1
-
-curl -v -X POST -H 'Content-Range: bytes 7-14/20' -H 'Content-Length: 8' -d 'rld is g' http://localhost:8900/resume_upload/ceshi.txt 2>&1
-
-curl -v -X POST -H 'Content-Range: bytes 15-19/20' -H 'Content-Length: 5' -H 'X-Checksum-MD5: 8339ed7abf090b1e370edbd93a1f5432' -H 'X-Checksum-SHA1: a7b520214072a6c8eb5924ce8bf16a7072d0970a' -H 'X-Checksum-CRC32: 8f6f216a' -d 'reat.' http://localhost:8900/resume_upload/ceshi.txt 2>&1
