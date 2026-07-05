@@ -19,11 +19,14 @@ jobs:
           go build -o dockup-bin ./cmd/dockup
           sudo install -m 0755 dockup-bin /usr/local/bin/dockup
           rm dockup-bin
-      - name: install vhs dependencies
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
-      - uses: charmbracelet/vhs-action@v2
-        with:
-          path: demo.tape
+      - name: install vhs (ffmpeg, ttyd, vhs)
+        run: |
+          sudo apt-get update && sudo apt-get install -y ffmpeg
+          curl -fsSL -o /tmp/ttyd https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.x86_64
+          sudo install -m 0755 /tmp/ttyd /usr/local/bin/ttyd
+          go install github.com/charmbracelet/vhs@latest
+      - name: record demo.gif
+        run: PATH="$(go env GOPATH)/bin:$PATH" vhs demo.tape
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "docs: regenerate demo.gif"
