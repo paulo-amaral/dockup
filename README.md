@@ -59,7 +59,7 @@ dockup --yes audit --format json
 | `nvidia` | [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html), the supported successor of the retired `nvidia-docker2` |
 | `harden` | Log rotation (`max-size`/`max-file`), `live-restore`, `no-new-privileges` in `/etc/docker/daemon.json` — merged, never clobbered, with a timestamped backup |
 | `podman` | [Podman](https://podman.io) from the distro's own repositories, daemonless and rootless-friendly |
-| `audit` | Read-only checks inspired by the CIS Docker Benchmark: socket permissions, `docker` group members, daemon flags, privileged containers. `--format json` + exit code 3 on WARN for CI gates |
+| `audit` | 13 read-only checks inspired by the CIS Docker Benchmark, each WARN graded low/medium/high: socket permissions, `docker` group, daemon flags, TCP endpoint TLS, insecure registries, content trust, privileged containers and sensitive mounts (including a mounted `docker.sock`). `--format json` + exit code 3 on WARN for CI gates |
 | `status` / `prune` | Engine health, `docker system df`, cleanup of unused data (with confirmation) |
 | `apple-install` / `apple-start` / `apple-status` | [Apple's open source `container`](https://github.com/apple/container) on macOS Apple Silicon |
 
