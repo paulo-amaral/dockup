@@ -4,7 +4,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
 )
 
 // Apple's open source `container` tool (github.com/apple/container) runs

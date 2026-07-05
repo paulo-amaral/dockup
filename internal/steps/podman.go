@@ -3,7 +3,7 @@ package steps
 import (
 	"os/exec"
 
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
 )
 
 // Podman ships in the default repositories of every distro dockup supports,

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
 )
 
 // auditStep runs read-only checks inspired by the CIS Docker Benchmark.

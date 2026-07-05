@@ -3,7 +3,7 @@ package steps
 import (
 	"os/exec"
 
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
 )
 
 // NVIDIA Container Toolkit replaced the deprecated nvidia-docker2. The repo

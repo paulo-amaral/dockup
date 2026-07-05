@@ -81,7 +81,7 @@ On macOS, `apple-install` prefers [MacPorts](https://ports.macports.org/port/con
 ## Build from source
 
 ```sh
-go install github.com/paulo-amaral/dockup/cmd/dockup@latest
+go install github.com/paulo-amaral/dockup/v2/cmd/dockup@latest
 ```
 
 Or clone and build:

@@ -10,8 +10,8 @@ import (
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/paulo-amaral/dockup/internal/steps"
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/steps"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
 )
 
 var (

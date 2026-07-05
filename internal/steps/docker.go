@@ -3,7 +3,7 @@ package steps
 import (
 	"os/exec"
 
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
 )
 
 // Docker's official convenience script installs the engine, the buildx and

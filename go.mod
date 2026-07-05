@@ -1,4 +1,4 @@
-module github.com/paulo-amaral/dockup
+module github.com/paulo-amaral/dockup/v2
 
 go 1.26.4
 

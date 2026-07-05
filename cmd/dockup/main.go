@@ -8,18 +8,32 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime/debug"
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/paulo-amaral/dockup/internal/steps"
-	"github.com/paulo-amaral/dockup/internal/sysinfo"
-	"github.com/paulo-amaral/dockup/internal/tui"
+	"github.com/paulo-amaral/dockup/v2/internal/steps"
+	"github.com/paulo-amaral/dockup/v2/internal/sysinfo"
+	"github.com/paulo-amaral/dockup/v2/internal/tui"
 )
 
-// version is stamped by GoReleaser via -ldflags.
+// version is stamped by GoReleaser via -ldflags. Builds installed with
+// `go install` skip ldflags, so fall back to the module version embedded
+// by the Go toolchain.
 var version = "dev"
 
+func resolveVersion() string {
+	if version != "dev" {
+		return version
+	}
+	if bi, ok := debug.ReadBuildInfo(); ok && bi.Main.Version != "" && bi.Main.Version != "(devel)" {
+		return bi.Main.Version
+	}
+	return version
+}
+
 func main() {
+	version = resolveVersion()
 	showVersion := flag.Bool("version", false, "print version and exit")
 	yes := flag.Bool("yes", false, "non-interactive mode: run ACTION without the TUI")
 	format := flag.String("format", "text", `output format for the audit action: "text" or "json"`)
