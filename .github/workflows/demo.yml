@@ -27,7 +27,7 @@ jobs:
           go install github.com/charmbracelet/vhs@latest
       - name: record demo.gif
         run: PATH="$(go env GOPATH)/bin:$PATH" vhs demo.tape
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: stefanzweifel/git-auto-commit-action@v7
         with:
           commit_message: "docs: regenerate demo.gif"
           file_pattern: demo.gif
